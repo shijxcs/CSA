@@ -1,0 +1,4 @@
+numpy==1.22.3
+torch==1.12.0
+torchvision==0.13.0
+yacs==0.1.8

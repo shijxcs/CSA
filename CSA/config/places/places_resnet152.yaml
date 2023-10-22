@@ -1,0 +1,55 @@
+name: places_resnet152
+print_freq: 10
+workers: 10
+log_dir: 'logs'
+model_dir: 'ckps'
+
+
+# dataset & model setting
+dataset: 'places'
+data_path: 'Path/to/Data/Places365/'
+num_classes: 365
+imb_factor: null
+backbone: 'resnet152_fe'
+feat_size: 2048
+bottle_size: 512
+hidden_size: 1024
+head_size: 1024
+resume: ''
+head_class_idx:
+  - 0
+  - 131
+med_class_idx:
+  - 131
+  - 288
+tail_class_idx:
+  - 288
+  - 365
+
+
+# distributed training
+deterministic: False
+distributed: False
+gpu: null
+world_size: -1
+rank: -1
+dist_url: 'tcp://224.66.41.62:23456'
+dist_backend: 'nccl'
+multiprocessing_distributed: False
+
+
+# Train
+mode: 'stage1'
+lr: 0.2
+batch_size: 256
+weight_decay: 5e-4
+num_epochs: 90
+momentum: 0.9
+cos: True
+mixup: False
+alpha: 0.2
+start_aug: 10
+end_aug: 3
+fit_thresh: 0.8
+bank_size: 256
+
