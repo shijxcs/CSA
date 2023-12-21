@@ -9,6 +9,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 
 from .sampler import ClassAwareSampler
+from .gaussianblur import GaussianBlur
 
 
 class LT_Dataset(Dataset):
@@ -88,7 +89,7 @@ class LT_Dataset_Eval(Dataset):
 
 
 class ImageNet_LT(object):
-    def __init__(self, distributed, root="", batch_size=60, num_works=40):
+    def __init__(self, distributed, root="", batch_size=60, num_works=40, randaug=False):
         
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         
@@ -108,6 +109,21 @@ class ImageNet_LT(object):
                 normalize,
             ])
 
+        if randaug:
+            transform_randaug = transforms.Compose([
+                transforms.RandomResizedCrop(size=224, scale=(0.2, 1.)),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomApply([
+                    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+                ], p=0.8),
+                transforms.RandomGrayscale(p=0.2),
+                transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
+                transforms.ToTensor(),
+                normalize,
+            ])
+
+            transform_raw = transform_train
+            transform_train = transforms.Lambda(lambda x: [transform_raw(x), transform_randaug(x), transform_randaug(x)])
         
         train_txt = "./datasets/data_txt/ImageNet_LT_train.txt"
         eval_txt = "./datasets/data_txt/ImageNet_LT_test.txt"

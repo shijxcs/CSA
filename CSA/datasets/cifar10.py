@@ -2,6 +2,7 @@ import numpy as np
 from .sampler import ClassAwareSampler
 from .autoaug import CIFAR10Policy, Cutout
 from .randaugment import RandAugment
+from .gaussianblur import GaussianBlur
 
 import torch
 import torchvision
@@ -65,7 +66,7 @@ class IMBALANCECIFAR10(torchvision.datasets.CIFAR10):
 class CIFAR10_LT(object):
 
     def __init__(self, distributed, root='./data/cifar10', imb_type='exp',
-                    imb_factor=0.01, batch_size=128, num_works=40, autoaug=False):
+                    imb_factor=0.01, batch_size=128, num_works=40, autoaug=False, randaug=False):
 
         if autoaug:
             train_transform = transforms.Compose([
@@ -83,6 +84,22 @@ class CIFAR10_LT(object):
                 transforms.ToTensor(),
                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
             ])
+
+        if randaug:
+            rand_transform = transforms.Compose([
+                transforms.RandomResizedCrop(size=32, scale=(0.2, 1.)),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomApply([
+                    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+                ], p=0.8),
+                transforms.RandomGrayscale(p=0.2),
+                transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+            ])
+
+            raw_transform = train_transform
+            train_transform = transforms.Lambda(lambda x: [raw_transform(x), rand_transform(x), rand_transform(x)])
 
         
         eval_transform = transforms.Compose([
